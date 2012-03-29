@@ -167,9 +167,15 @@ app.post('/posttest', function(req, res){
 });
 
 
-app.get('/me', function(req, res){
+app.get('/friends', function(req, res){
   req.facebook.get('/me/friends', { limit: 4 }, function(friends) {
       res.send('friends: ' + require('util').inspect(friends));
+    });
+});
+
+app.get('/me', function(req, res){
+  req.facebook.get('/me', { }, function(data) {
+      res.send('friends: ' + require('util').inspect(data));
     });
 });
 
