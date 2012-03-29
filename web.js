@@ -50,11 +50,11 @@ var app = express.createServer(
   express.bodyParser(),
   express.cookieParser(),
   // set this to a secret value to encrypt session cookies
-  express.session({ secret: process.env.SESSION_SECRET || 'topsecret123456' }),
+  express.session({ secret: process.env.SESSION_SECRET || 'topsecret55887456' }),
   require('faceplate').middleware({
     app_id: process.env.FACEBOOK_APP_ID,
     secret: process.env.FACEBOOK_SECRET,
-    scope:  'user_likes,user_photos,user_photo_video_tags'
+    scope:  'user_likes,user_photos,user_photo_video_tags,email,user_work_history,offline_access' //TODO: offline_access is deprecated now.
   })
 );
 
@@ -111,7 +111,7 @@ function handle_facebook_request(req, res) {
     async.parallel([
       function(cb) {
         // query 4 friends and send them to the socket for this socket id
-        req.facebook.get('/me/friends', { limit: 4 }, function(friends) {
+        req.facebook.get('/me/friends', { limit: 20 }, function(friends) {
           req.friends = friends;
           cb();
         });
@@ -124,8 +124,15 @@ function handle_facebook_request(req, res) {
         });
       },
       function(cb) {
+        // query 16 photos and send them to the socket for this socket id
+        req.facebook.get('/me/', { }, function(photos) {
+          req.me = me;
+          cb();
+        });
+      },
+      function(cb) {
         // query 4 likes and send them to the socket for this socket id
-        req.facebook.get('/me/likes', { limit: 4 }, function(likes) {
+        req.facebook.get('/me/likes', { limit: 20 }, function(likes) {
           req.likes = likes;
           cb();
         });
@@ -166,6 +173,20 @@ app.post('/posttest', function(req, res){
   res.send(req.body);
 });
 
+
+app.get('/me', function(req, res){
+  async.parallel([
+    function(cb) {
+      // query 4 friends and send them to the socket for this socket id
+      req.facebook.get('/me', { }, function(me) {
+        req.me = me;
+        cb();
+      });
+    }
+  ], function() {
+    res.send(req.me);
+  });
+});
 ///////////////////////////////////////////////////////////////////
 //    Geo Location API V1
 ////////////////////////////////////////////////////////////////
