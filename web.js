@@ -10,7 +10,7 @@ var _       = require('underscore')._;
 ////////////////////////////////////////////////////////////////
 
 // app.js
-var databaseUrl = "mongodb://heroku:9c5a159a71c967db9bceeb828580d00b@staff.mongohq.com:10078/app3531431"; //"MONGOHQ_URL"; // "username:password@example.com/mydb"
+var databaseUrl = process.env.MONGOHQ_URL ; //""; // "username:password@example.com/mydb"
 var collections = ["users", "events"]
 var db = require("mongojs").connect(databaseUrl, collections);
 
