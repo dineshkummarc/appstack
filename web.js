@@ -124,13 +124,6 @@ function handle_facebook_request(req, res) {
         });
       },
       function(cb) {
-        // query 16 photos and send them to the socket for this socket id
-        req.facebook.get('/me/', { }, function(photos) {
-          req.me = me;
-          cb();
-        });
-      },
-      function(cb) {
         // query 4 likes and send them to the socket for this socket id
         req.facebook.get('/me/likes', { limit: 20 }, function(likes) {
           req.likes = likes;
@@ -175,18 +168,11 @@ app.post('/posttest', function(req, res){
 
 
 app.get('/me', function(req, res){
-  async.parallel([
-    function(cb) {
-      // query 4 friends and send them to the socket for this socket id
-      req.facebook.get('/me', { }, function(me) {
-        req.me = me;
-        cb();
-      });
-    }
-  ], function() {
-    res.send(req.me);
-  });
+  req.facebook.get('/me/friends', { limit: 4 }, function(friends) {
+      res.send('friends: ' + require('util').inspect(friends));
+    });
 });
+
 ///////////////////////////////////////////////////////////////////
 //    Geo Location API V1
 ////////////////////////////////////////////////////////////////
