@@ -54,7 +54,7 @@ var app = express.createServer(
   require('faceplate').middleware({
     app_id: process.env.FACEBOOK_APP_ID,
     secret: process.env.FACEBOOK_SECRET,
-    scope:  'user_likes,user_photos,user_photo_video_tags,email,user_work_history,offline_access' //TODO: offline_access is deprecated now.
+    scope:  'user_likes,user_photos,user_photo_video_tags,email,user_work_history,offline_access,location,friends,languages,user_website' //TODO: offline_access is deprecated now.
   })
 );
 
@@ -168,15 +168,31 @@ app.post('/posttest', function(req, res){
 
 
 app.get('/friends', function(req, res){
-  req.facebook.get('/me/friends', { limit: 4 }, function(friends) {
-      res.send('friends: ' + require('util').inspect(friends));
+  req.facebook.get('/me/friends', { limit:5000 }, function(friends) {
+      //res.send('friends: ' + require('util').inspect(friends));
+      res.send(data); //plain json
     });
 });
 
 app.get('/me', function(req, res){
   req.facebook.get('/me', { }, function(data) {
-      res.send('friends: ' + require('util').inspect(data));
+      //res.send('friends: ' + require('util').inspect(data));
+      res.send(data); //plain json
     });
+});
+
+app.get('/me2', function(req, res){
+  req.facebook.get('/me', { fields: 'email, name, locale, work, languages, education, location, website,friends'}, function(data) {
+      //res.send('' + require('util').inspect(data));
+      res.send(data); //plain json
+    });
+});
+
+
+app.post('/api/setCity', function(req, res){
+  var id = '12345'
+db.users.update({id: id}, {$inc:{level:1}}, {multi:false}, function(err) {
+    // the update is complete
 });
 
 ///////////////////////////////////////////////////////////////////
