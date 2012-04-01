@@ -18,30 +18,14 @@ var collections = ["users", "events"]
 var db = require("mongojs").connect(databaseUrl, collections);
 
 
-///////////////////////////////////////////////////////////////////
-//    email server
-////////////////////////////////////////////////////////////////
-/*
-var SendGrid = require('sendgrid').SendGrid;
-var sendgrid = new SendGrid(
-  process.env.SENDGRID_USERNAME,
-  process.env.SENDGRID_PASSWORD
-);
 
-app.get('/emailme', function(req, res){  //testing route - should work locally as well once .env is populated with credential
-  sendgrid.send({
-    to: 'info@iplanwebsites.com',
-    from: 'test@example.com',
-    subject: 'test',
-    text: 'Sending email with NodeJS through SendGrid!'
-  });
-});
-*/
 
 ///////////////////////////////////////////////////////////////////
 //    Payment Provider  //tut: http://www.catonmat.net/blog/stripe-payments-with-node/
 ////////////////////////////////////////////////////////////////
 
+
+// FAULTY CODE HERE!!
 /*
 var stripe_secret = process.env.STRIPE_SECRET;
 var stripe_secret_dev = process.env.STRIPE_SECRET_DEV;
@@ -72,8 +56,8 @@ app.post("/plans/browserling_developer", function(req, res) {
 app.get('/pay', function(req, res){
   res.render('pay_form.ejs', { title: 'New Template Page', layout: true }); 
 });
-*/
 
+*/
 
 
 ///////////////////////////////////////////////////////////////////
@@ -167,6 +151,30 @@ function render_page(req, res) {
     });
   });
 }
+
+
+///////////////////////////////////////////////////////////////////
+//    email server
+////////////////////////////////////////////////////////////////
+
+var SendGrid = require('sendgrid').SendGrid;
+var sendgrid = new SendGrid(
+  process.env.SENDGRID_USERNAME,
+  process.env.SENDGRID_PASSWORD
+);
+
+app.get('/emailme', function(req, res){  //testing route - should work locally as well once .env is populated with credential
+  sendgrid.send({
+    to: 'info@iplanwebsites.com',
+    from: 'test@example.com',
+    subject: 'test',
+    text: 'Sending email with NodeJS through SendGrid!'
+  }, function(){
+    res.send('email sent!'); //handle error callback??
+  });
+});
+
+
 
 ///////////////////////////////////////////////////////////////////
 //    FB connect  //http://howtonode.org/facebook-connect
