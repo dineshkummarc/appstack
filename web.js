@@ -1,7 +1,7 @@
 var async = require('async');
 var express = require('express');
 var util = require('util');
-var gm      = require('googlemaps');  //https://github.com/moshen/node-googlemaps/blob/master/lib/googlemaps.js
+var gm = require('googlemaps'); //https://github.com/moshen/node-googlemaps/blob/master/lib/googlemaps.js
 /*
 var geohash = require("geohash").GeoHash;
 
@@ -16,12 +16,17 @@ var databaseUrl = process.env.MONGOHQ_URL; //""; // "username:password@example.c
 var collections = ["users", "events"]
 var db = require("mongojs").connect(databaseUrl, collections);
 
-db.users.ensureIndex({id:1});  //info: http://www.mongodb.org/display/DOCS/Indexes
-
+db.users.ensureIndex({
+    id: 1
+}); //info: http://www.mongodb.org/display/DOCS/Indexes
 
 //geo loc indexes
-db.users.ensureIndex({'home.loc': '2d' }); 
-db.users.ensureIndex({'work.loc': '2d' }); 
+db.users.ensureIndex({
+    'home.loc': '2d'
+});
+db.users.ensureIndex({
+    'work.loc': '2d'
+});
 
 
 
@@ -29,7 +34,6 @@ db.users.ensureIndex({'work.loc': '2d' });
 ///////////////////////////////////////////////////////////////////
 //    DB EXAMPLES
 ////////////////////////////////////////////////////////////////
-
 // examples....  (http://howtonode.org/node-js-and-mongodb-getting-started-with-mongojs)
 /*
 db.users.find({sex: "female"}, function(err, users) {
@@ -56,7 +60,6 @@ db.users.update({email: "srirangan@gmail.com"}, {$set: {password: "iReallyLoveMo
 ///////////////////////////////////////////////////////////////////
 //    Express server setup
 ////////////////////////////////////////////////////////////////
-
 // create an express webserver
 var app = express.createServer(
 express.logger(), express.static(__dirname + '/public'), express.bodyParser(),
@@ -68,7 +71,7 @@ express.session({
 }), require('faceplate').middleware({
     app_id: process.env.FACEBOOK_APP_ID,
     secret: process.env.FACEBOOK_SECRET,
-    scope: 'user_likes,user_photos,user_photo_video_tags,email,user_work_history,location,friends,languages,user_website' 
+    scope: 'user_likes,user_photos,user_photo_video_tags,email,user_work_history,location,friends,languages,user_website'
     //NOTE: SCOPE is set on CLIENT SIDE TOKEN!
 }));
 
@@ -147,7 +150,8 @@ var stripe = require('stripe')(stripe_secret_dev); //maybe publi key goes here??
 app.post("/plans/browserling_developer", function (req, res) {
     stripe.customers.create({
         card: req.body.stripeToken,
-        email: req.session.email, //  // customer's email (get it from db or session)"...",
+        email: req.session.email,
+        //  // customer's email (get it from db or session)"...",
         plan: "test" // this value has to be created on stripe.com as well...
     }, function (err, customer) {
         if (err) {
@@ -234,7 +238,6 @@ function handle_facebook_request(req, res) {
 ////////////////////////////////////////////////////////////////
 
 
-
 app.get('/', handle_facebook_request);
 app.post('/', handle_facebook_request);
 
@@ -319,8 +322,9 @@ app.post('/api/setCity', function (req, res) {
 ////////////////////////////////////////////////////////////////
 
 
-/*
-app.get('/ensuresession', function(req, res){ // sets session ID according to FB id
+app.get('/ensuresession', function (req, res) { // sets session ID according to FB id
+    console.log('ensuresession! + ' + req.session.uid);
+    /*
   if( (! req.session.uid) || (req.session.uid == undefined)){
     req.facebook.get('/me', { fields: 'id'}, function(data) {
         var id =  data.id ; //plain str
@@ -331,24 +335,79 @@ app.get('/ensuresession', function(req, res){ // sets session ID according to FB
     id = req.session.uid ;
     res.send( id ); //res.send('uid = '+ ' (session...)' + id );
   }
-});*/
+  */
+    ensureSession(req, res, function () {
+        console.log('CALL BAKC ENSURED! + ' + req.session.uid);
+        res.send(req.session.uid);
+    });
+});
+
+function ensureFacebook(req, res, callback) {
+    // if no facebook token, return error, ask to login...
+    if (req.facebook.token) { //if logged on facebook...
+        callback(req, res);
+    } else {
+        console.log('FB IS NOT SET, proceed to login on client side first');
+        //no callback/
+        // TODO: redirect to home??
+    }
+}
+
+function ensureSession(req, res, callback) { // make sure that user is connected, and session are set
+    // TODO, make sure the FB token exists as well, if not, redirect to homepage, don't call the callback...
+    // BUG, if not FB logged, crashes!!
+    ensureFacebook(req, res, function () {
+        if ((!req.session.uid) || (req.session.uid == undefined)) {
+            req.facebook.get('/me', {
+                fields: 'id'
+            }, function (data) {
+                var id = data.id; //plain str
+                req.session.uid = id;
+                console.log('uid (FB just setted) = ' + id + data);
+                callback(req, res);
+            });
+        } else {
+            console.log('uid = ' + ' (session...)' + req.session.uid);
+            callback(req, res);
+        }
+    });
+}
+
+app.get('/user', function (req, res) { // fetch data on facebook for our user, saves it to the database.
+    ensureSession(req, res, function () {
+        // res.send('user');
+        var uid = req.session.uid;
+        
+        
+        
+        db.users.find({
+            id: uid
+        }, function (err, users) { // check if user exist... (poll mongo...)
+            if (err || !users || (users.length ==0)) { //the dude's note on file
+                console.log("No user found...");
+                fetchFbUserDate(req, res, function () {
+                    console.log("FB2 callback!");
+                    res.send(req.user); //the user will have been populated by FB.
+                }); //eo fb fetch
+            } else {
+                console.log("FOUND THE GUY ON FILE!!!" + users.length);
+                res.send(users); //the matching record from MOngo
+            }
+        }); //eo db search
+    }); //eo ensure session
+    console.log('Session ID : ' + req.session.uid);
+}); //eo route
 
 
-function ensureSession(req, res, callback){  // make sure that user is connected, and session are set
-  // TODO, make sure the FB token exists as well, if not, redirect to homepage, don't call the callback...
-  if( (! req.session.uid) || (req.session.uid == undefined)){
-    req.facebook.get('/me', { fields: 'id'}, function(data) {
-        var id =  data.id ; //plain str
-        req.session.uid = id;
-       console.log('uid (FB just setted) = ' + id );
-       callback(req, res);
-      });
-  }else{
-    console.log('uid = '+ ' (session...)' + id );
-    callback(req, res);
-    // id = req.session.uid ;
-    
-  }
+
+
+function outputUser(req, res) { //set the sessions value according to FB data or FB, and output the thing to client
+    // set sessions
+    var id = req.user.me.id
+    req.session.uid = id;
+    req.session.email = req.me.email;
+
+    res.send(req.user);
 }
 
 
@@ -360,26 +419,10 @@ app.get('/aaa', function (req, res) {
     res.send('data22aaaa'); //plain json
 });*/
 
-app.get('/user', function(req, res){ // fetch data on facebook for our user, saves it to the database.
-  
-  
-  // res.send('user');
-  // if no facebook token, return error, ask to login...
-  
-  // 1.
-  // check if user exist... (poll mongo...)
-  // var uid = req.session.uid;
+function fetchFbUserDate(req, res, callback) { //Only for the first time, or when we feel it's time to update user data from FB
+  console.log('fetchFbUserDate()');
+    async.parallel([
 
-/*
-   db.users.find({id: uid}, function(err, users) {
-     if( err || !users) console.log("No female users found");
-     else users.forEach( function(femaleUser) {
-       console.log(femaleUser);
-     } );
-   });*/
-   
-   
-  async.parallel([
     function (cb) {
         // query 4 friends and send them to the socket for this socket id
         req.facebook.get('/me/friends', {
@@ -391,8 +434,7 @@ app.get('/user', function(req, res){ // fetch data on facebook for our user, sav
     }, function (cb) {
         // query 16 photos and send them to the socket for this socket id
         req.facebook.get('/me', {
-          fields: 'email, name, locale, work, languages, education, location, website, picture, gender, about, birthday' //add more fields as required, just make sure scope match...
-          
+            fields: 'email, name, locale, work, languages, education, location, website, picture, gender, about, birthday' //add more fields as required, just make sure scope match...
         }, function (me) {
             req.me = me;
             cb();
@@ -412,107 +454,100 @@ app.get('/user', function(req, res){ // fetch data on facebook for our user, sav
             cb();
         });
     }], function () { //Once we received all data from FB...
-        
-
-        //create user object to be inserted
-        var user = {
-            id: id,
-            email: req.me.email, 
+        console.log('ASYNC CALLS finished');
+        console.log(req.me.email + '1');
+        var user = { //create user object to be inserted
+            id: req.session.uid,
+            email: req.me.email,
             sex: req.me.gender,
             birthday: req.me.birthday,
-            
-            photo: "http://graph.facebook.com/"+req.session.uid+"/picture?type=large",
-            photo_square: "http://graph.facebook.com/"+req.session.uid+"/picture?type=square",
-            
+            photo: "http://graph.facebook.com/" + req.session.uid + "/picture?type=large",
+            photo_square: "http://graph.facebook.com/" + req.session.uid + "/picture?type=square",
             friends: req.friends,
             me: req.me
-          }
+        }
+        console.log(req.me.email);
+        console.log(user.id);
+        req.user = user; //so it's accessible down the line
+        console.log(req.user);
+        callback(req, res);
         
-          db.users.save(user, function(err, saved) {
-            if( err || !saved ) console.log("User not saved");
+        // save the fb fetches in the database
+        db.users.save(user, function (err, saved) {
+            if (err || !saved) console.log("User not saved");
             else console.log("User saved");
-          });
-      
-      
-      
-      
-      
-          // set sessions
-          var id = req.me.id
-          req.session.uid = id;
-          req.session.email = req.me.email;
-          
-          
-        res.send(user);
-        //render_page(req, res);
+        });
+        
+
     }); //eo async fb callback
-  
-});
+} //eo function
+
+
 
 
 //   /api/setlocation/?home=laval&work=montreal
 // http://127.0.0.1:5000/api/setlocation?home=laval&work=montreal
-
 //app.get('api/setlocation', function(req, res){ // fetch data on facebook for our user, saves it to the database.
- app.get('/setlocation', function(req, res){ // fetch data on facebook for our user, saves it to the database.
- 
- // TODO: ENsure user is logged!
- 
-  ///:home/:work
-  async.parallel([ // call google-maps for both addresses async
+app.get('/setlocation', function (req, res) { // fetch data on facebook for our user, saves it to the database.
+    // TODO: ENsure user is logged!
+    ///:home/:work
+    async.parallel([ // call google-maps for both addresses async
     function (cb) {
         gm.geocode(req.param("home") || 'montreal', function (err, data) {
             req.home = data.results[0];
-            req.home['loc'] = [req.home.geometry.location.lng, req.home.geometry.location.lat];//for geospatial indexing
+            req.home['loc'] = [req.home.geometry.location.lng, req.home.geometry.location.lat]; //for geospatial indexing
             cb();
             //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
             //res.send(coords);
         });
     }, function (cb) {
-      gm.geocode(req.param("work") || 'toronto', function (err, data) {
-          req.work = data.results[0];
-          req.work['loc'] = [req.work.geometry.location.lng, req.work.geometry.location.lat]; //for geospatial indexing
-          cb();
-          //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
-          //res.send(coords);
-      });
-    },
-    function (cb) {
-      // exports.distance = function(origins, destinations, callback, sensor, mode, alternatives, avoid, units, language){
-      gm.distance(req.param("home")|| 'montreal', req.param("work")|| 'toronto', function (err, data) {
-        req.commute = data.rows[0].elements[0]; //only keep distance + duration.
-        cb();
-          //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
-          //res.send(coords);
-      });
+        gm.geocode(req.param("work") || 'toronto', function (err, data) {
+            req.work = data.results[0];
+            req.work['loc'] = [req.work.geometry.location.lng, req.work.geometry.location.lat]; //for geospatial indexing
+            cb();
+            //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
+            //res.send(coords);
+        });
+    }, function (cb) {
+        // exports.distance = function(origins, destinations, callback, sensor, mode, alternatives, avoid, units, language){
+        gm.distance(req.param("home") || 'montreal', req.param("work") || 'toronto', function (err, data) {
+            req.commute = data.rows[0].elements[0]; //only keep distance + duration.
+            cb();
+            //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
+            //res.send(coords);
+        });
     }], function () { //Once we received all data from FB...
+        var loc = {
+            home: req.home,
+            work: req.work,
+            commute: req.commute,
+            updated: new Date()
+        }
 
-            var loc = {
-                home: req.home,
-                work: req.work,
-                commute: req.commute,
-                updated: new Date()
-              }
-              
-              var uid = req.session.uid;
-              db.users.update({id: uid}, {$set: {loc: loc}}, function(err, updated) {
-                if( err || !updated ) console.log("User not updated: "+req.session.uid);
-                else console.log("User updated");
-              });
-              
-/*
+        var uid = req.session.uid;
+        db.users.update({
+            id: uid
+        }, {
+            $set: {
+                loc: loc
+            }
+        }, function (err, updated) {
+            if (err || !updated) console.log("User not updated: " + req.session.uid);
+            else console.log("User updated");
+        });
+
+        /*
               db.users.put(loc, function(err, saved) {
                 if( err || !saved ) console.log("User not saved");
                 else console.log("User saved");
               });*/
 
-            res.send(loc);
-            
-        });//eo parrallel calls
-      
-  
-  
-  
+        res.send(loc);
+
+    }); //eo parrallel calls
+
+
+
 });
 
 
@@ -575,7 +610,6 @@ function getElevation(lat, lng, callback) {
 ///////////////////////////////////////////////////////////////////
 //    FINI
 ////////////////////////////////////////////////////////////////
-
 /*
 function get_distance(points) { //return the computed driving distance from google maps API
 getElevation(40.714728,-73.998672, function(elevation){
