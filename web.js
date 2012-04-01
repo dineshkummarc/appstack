@@ -347,7 +347,7 @@ function ensureFacebook(req, res, callback) {
     if (req.facebook.token) { //if logged on facebook...
         callback(req, res);
     } else {
-        console.log('FB IS NOT SET, proceed to login on client side first');
+        console.log('FB IS NOT SET, user should proceed to login on client side first');
         //no callback/
         // TODO: redirect to home??
     }
@@ -375,13 +375,8 @@ function ensureSession(req, res, callback) { // make sure that user is connected
 
 app.get('/user', function (req, res) { // fetch data on facebook for our user, saves it to the database.
     ensureSession(req, res, function () {
-        // res.send('user');
-        var uid = req.session.uid;
-        
-        
-        
         db.users.find({
-            id: uid
+            id: req.session.uid
         }, function (err, users) { // check if user exist... (poll mongo...)
             if (err || !users || (users.length ==0)) { //the dude's note on file
                 console.log("No user found...");
@@ -391,7 +386,7 @@ app.get('/user', function (req, res) { // fetch data on facebook for our user, s
                 }); //eo fb fetch
             } else {
                 console.log("FOUND THE GUY ON FILE!!!" + users.length);
-                res.send(users); //the matching record from MOngo
+                res.send(users[0]); //the matching record from MOngo
             }
         }); //eo db search
     }); //eo ensure session
@@ -406,18 +401,9 @@ function outputUser(req, res) { //set the sessions value according to FB data or
     var id = req.user.me.id
     req.session.uid = id;
     req.session.email = req.me.email;
-
     res.send(req.user);
 }
 
-
-
-/*
-app.get('/aaa', function (req, res) {
-    // returns current user DATA in JSON.
-    //req.session.test = "fat cat";
-    res.send('data22aaaa'); //plain json
-});*/
 
 function fetchFbUserDate(req, res, callback) { //Only for the first time, or when we feel it's time to update user data from FB
   console.log('fetchFbUserDate()');
@@ -486,11 +472,9 @@ function fetchFbUserDate(req, res, callback) { //Only for the first time, or whe
 
 
 //   /api/setlocation/?home=laval&work=montreal
-// http://127.0.0.1:5000/api/setlocation?home=laval&work=montreal
-//app.get('api/setlocation', function(req, res){ // fetch data on facebook for our user, saves it to the database.
 app.get('/setlocation', function (req, res) { // fetch data on facebook for our user, saves it to the database.
     // TODO: ENsure user is logged!
-    ///:home/:work
+  ensureSession(req, res, function(){
     async.parallel([ // call google-maps for both addresses async
     function (cb) {
         gm.geocode(req.param("home") || 'montreal', function (err, data) {
@@ -525,29 +509,13 @@ app.get('/setlocation', function (req, res) { // fetch data on facebook for our 
         }
 
         var uid = req.session.uid;
-        db.users.update({
-            id: uid
-        }, {
-            $set: {
-                loc: loc
-            }
-        }, function (err, updated) {
+        db.users.update({id: uid}, { $set: { loc: loc }}, function (err, updated) {
             if (err || !updated) console.log("User not updated: " + req.session.uid);
             else console.log("User updated");
         });
-
-        /*
-              db.users.put(loc, function(err, saved) {
-                if( err || !saved ) console.log("User not saved");
-                else console.log("User saved");
-              });*/
-
         res.send(loc);
-
     }); //eo parrallel calls
-
-
-
+  });//eo ensure-session
 });
 
 
