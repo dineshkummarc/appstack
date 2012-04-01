@@ -3,6 +3,9 @@ Facebook/Heroku sample app -- Node.js
 
 This is a sample app showing use of the Facebook Graph API, written in Node.js, designed for deployment to [Heroku](http://www.heroku.com/).
 
+Based on the default node.js facebook template.
+
+
 
 
 
@@ -41,7 +44,22 @@ to Auto-restart the server:
     rerun foreman start
 
 
-Deploy to Heroku directly
+
+Activate the debug console
+-------------------------
+    
+Heroku (hosting) doesn'T appreciate debugging, but you can run the debug console locally if you tweak your local Procfile, juste make sure to not commit it to GIT. 
+
+  web: node --debug web.js
+
+
+You might need to install the node-inspector package first:
+
+    npm install -g node-inspector
+
+
+
+Deploy to Heroku 
 -------------------------
 
 If you prefer to deploy yourself, push this code to a new Heroku app on the Cedar stack, then copy the App ID and Secret into your config vars:
