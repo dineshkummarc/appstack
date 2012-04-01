@@ -2,12 +2,12 @@ var async   = require('async');
 var express = require('express');
 var util    = require('util');
 
-
+/*
 var geohash = require("geohash").GeoHash;
 var gm      = require('googlemaps');  //https://github.com/moshen/node-googlemaps/blob/master/lib/googlemaps.js
 var _       = require('underscore')._;
 
-
+*/
 ///////////////////////////////////////////////////////////////////
 //    Database
 ////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@ var db = require("mongojs").connect(databaseUrl, collections);
 ///////////////////////////////////////////////////////////////////
 //    email server
 ////////////////////////////////////////////////////////////////
-
+/*
 var SendGrid = require('sendgrid').SendGrid;
 var sendgrid = new SendGrid(
   process.env.SENDGRID_USERNAME,
@@ -36,13 +36,13 @@ app.get('/emailme', function(req, res){  //testing route - should work locally a
     text: 'Sending email with NodeJS through SendGrid!'
   });
 });
-
+*/
 
 ///////////////////////////////////////////////////////////////////
 //    Payment Provider  //tut: http://www.catonmat.net/blog/stripe-payments-with-node/
 ////////////////////////////////////////////////////////////////
 
-
+/*
 var stripe_secret = process.env.STRIPE_SECRET;
 var stripe_secret_dev = process.env.STRIPE_SECRET_DEV;
 
@@ -72,7 +72,7 @@ app.post("/plans/browserling_developer", function(req, res) {
 app.get('/pay', function(req, res){
   res.render('pay_form.ejs', { title: 'New Template Page', layout: true }); 
 });
-
+*/
 
 
 
