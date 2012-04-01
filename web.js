@@ -1,10 +1,10 @@
 var async = require('async');
 var express = require('express');
 var util = require('util');
-
+var gm      = require('googlemaps');  //https://github.com/moshen/node-googlemaps/blob/master/lib/googlemaps.js
 /*
 var geohash = require("geohash").GeoHash;
-var gm      = require('googlemaps');  //https://github.com/moshen/node-googlemaps/blob/master/lib/googlemaps.js
+
 var _       = require('underscore')._;
 */
 
@@ -16,7 +16,7 @@ var databaseUrl = process.env.MONGOHQ_URL; //""; // "username:password@example.c
 var collections = ["users", "events"]
 var db = require("mongojs").connect(databaseUrl, collections);
 
-
+db.users.ensureIndex({id:1});  //info: http://www.mongodb.org/display/DOCS/Indexes
 
 
 
@@ -64,7 +64,8 @@ express.session({
 }), require('faceplate').middleware({
     app_id: process.env.FACEBOOK_APP_ID,
     secret: process.env.FACEBOOK_SECRET,
-    scope: 'user_likes,user_photos,user_photo_video_tags,email,user_work_history,offline_access,location,friends,languages,user_website' //TODO: offline_access is deprecated now.
+    scope: 'user_likes,user_photos,user_photo_video_tags,email,user_work_history,location,friends,languages,user_website' 
+    //NOTE: SCOPE is set on CLIENT SIDE TOKEN!
 }));
 
 app.debug = true;
@@ -309,27 +310,140 @@ app.post('/api/setCity', function (req, res) {
 //    USER methods
 ////////////////////////////////////////////////////////////////
 
-app.get('/ttt', function(req, res){
-  // returns current user DATA in JSON.
-  req.session.test = "ugly cat";
-  //res.send('data');
+
+
+app.get('/u/ensuresession', function(req, res){ // sets session ID according to FB id
+  if( (! req.session.uid) || (req.session.uid == undefined)){
+    req.facebook.get('/me', { fields: 'id'}, function(data) {
+        var id =  data.id ; //plain str
+        req.session.uid = id;
+        res.send(id); //res.send('uid (FB just setted) = ' + id );
+      });
+  }else{
+    id = req.session.uid ;
+    res.send( id ); //res.send('uid = '+ ' (session...)' + id );
+  }
+});
+
+
+app.get('api/getuser', function(req, res){ // fetch data on facebook for our user, saves it to the database.
+  
+  // if no facebook token, return error, ask to login...
+  
+  // 1.
+  // check if user exist... (poll mongo...)
+  
+  
+  
+  var uid = req.session.uid;
+  async.parallel([
+    function (cb) {
+        // query 4 friends and send them to the socket for this socket id
+        req.facebook.get('/me/friends', {
+            limit: 2000
+        }, function (friends) {
+            req.friends = friends;
+            cb();
+        });
+    }, function (cb) {
+        // query 16 photos and send them to the socket for this socket id
+        req.facebook.get('/me', {
+          fields: 'email, name, locale, work, languages, education, location, website, picture, gender, about, birthday' //add more fields as required, just make sure scope match...
+          
+        }, function (me) {
+            req.me = me;
+            cb();
+        });
+    }, function (cb) {
+        // query 4 likes and send them to the socket for this socket id
+        req.facebook.get('/me/likes', {
+            limit: 20
+        }, function (likes) {
+            req.likes = likes;
+            cb();
+        });
+    }, function (cb) {
+        // use fql to get a list of my friends that are using this app
+        req.facebook.fql('SELECT uid, name, is_app_user, pic_square FROM user WHERE uid in (SELECT uid2 FROM friend WHERE uid1 = me()) AND is_app_user = 1', function (result) {
+            req.friends_using_app = result;
+            cb();
+        });
+    }], function () { //Once we received all data from FB...
+        
+        var id = req.me.id
+        req.session.uid = id;
+        var user = {
+            id: id,
+            email: req.me.email, 
+            sex: req.me.gender,
+            birthday: req.me.birthday,
+            
+            photo: "http://graph.facebook.com/"+req.session.uid+"/picture?type=large",
+            photo_square: "http://graph.facebook.com/"+req.session.uid+"/picture?type=square",
+            
+            friends: req.friends,
+            me: req.me
+          }
+        
+          db.users.save(user, function(err, saved) {
+            if( err || !saved ) console.log("User not saved");
+            else console.log("User saved");
+          });
+      
+        res.send(user);
+        //render_page(req, res);
+    }); //eo async fb fetch
   
 });
 
-app.get('/u/set', function(req, res){
-  // returns current user DATA in JSON.
-  req.session.test = "too big cat";
-  req.facebook.get('/me', { fields: 'id'}, function(data) {
-      //res.send('' + require('util').inspect(data));
-      res.send(data); //plain json
-    });
-});
 
-app.get('/u/get', function(req, res){
-  // returns current user DATA in JSON.
-  var ret = "session= "+ req.session.test;
-  res.send('data' +ret);
+//   /api/setlocation/laval/montreal
+//app.get('api/setlocation/:home/:work', function(req, res){ // fetch data on facebook for our user, saves it to the database.
+ app.get('/e', function(req, res){ // fetch data on facebook for our user, saves it to the database.
  
+  
+  async.parallel([ // call google-maps for both addresses async
+    function (cb) {
+        gm.geocode(req.param("home"), function (err, data) {
+            req.home = data.results[0];
+            //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
+            //res.send(coords);
+        });
+    }, function (cb) {
+      gm.geocode(req.param("work"), function (err, data) {
+          req.work = data.results[0];
+          //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
+          //res.send(coords);
+      });
+    },
+    function (cb) {
+      // exports.distance = function(origins, destinations, callback, sensor, mode, alternatives, avoid, units, language){
+      gm.distance(req.param("work"), function (err, data) {
+        req.commute = data;
+          //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
+          //res.send(coords);
+      });
+    }], function () { //Once we received all data from FB...
+
+            var loc = {
+                home: req.home,
+                work: req.work,
+                commute: req.commute,
+                updated: new Date()
+              }
+
+              db.users.put(loc, function(err, saved) {
+                if( err || !saved ) console.log("User not saved");
+                else console.log("User saved");
+              });
+
+            res.send(loc);
+            //we should instead return
+        });//eo parrallel calls
+      
+  
+  
+  
 });
 
 
