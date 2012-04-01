@@ -1,18 +1,86 @@
 var async   = require('async');
 var express = require('express');
 var util    = require('util');
+
+
 var geohash = require("geohash").GeoHash;
 var gm      = require('googlemaps');  //https://github.com/moshen/node-googlemaps/blob/master/lib/googlemaps.js
 var _       = require('underscore')._;
 
+
 ///////////////////////////////////////////////////////////////////
 //    Database
 ////////////////////////////////////////////////////////////////
-
+/*
 // app.js
 var databaseUrl = process.env.MONGOHQ_URL ; //""; // "username:password@example.com/mydb"
 var collections = ["users", "events"]
 var db = require("mongojs").connect(databaseUrl, collections);
+*/
+
+///////////////////////////////////////////////////////////////////
+//    email server
+////////////////////////////////////////////////////////////////
+/*
+var SendGrid = require('sendgrid').SendGrid;
+var sendgrid = new SendGrid(
+  process.env.SENDGRID_USERNAME,
+  process.env.SENDGRID_PASSWORD
+);
+
+app.get('/emailme', function(req, res){  //testing route - should work locally as well once .env is populated with credential
+  sendgrid.send({
+    to: 'info@iplanwebsites.com',
+    from: 'test@example.com',
+    subject: 'test',
+    text: 'Sending email with NodeJS through SendGrid!'
+  });
+});
+
+
+///////////////////////////////////////////////////////////////////
+//    Payment Provider  //tut: http://www.catonmat.net/blog/stripe-payments-with-node/
+////////////////////////////////////////////////////////////////
+
+
+var stripe_secret = process.env.STRIPE_SECRET;
+var stripe_secret_dev = process.env.STRIPE_SECRET_DEV;
+
+var stripe = require('stripe')(stripe_secret_dev);  //maybe publi key goes here??
+
+app = express.createServer(express.bodyDecoder);
+
+app.post("/plans/browserling_developer", function(req, res) {
+  stripe.customers.create({
+    card : req.body.stripeToken,
+    email : "...", // customer's email (get it from db or session)
+    plan : "browserling_developer"
+  }, function (err, customer) {
+    if (err) {
+      var msg = customer.error.message || "unknown";
+      res.send("Error while processing your payment: " + msg);
+    }
+    else {
+      var id = customer.id;
+      console.log('Success! Customer with Stripe ID ' + id + ' just signed up!');
+      // save this customer to your database here!
+      res.send('ok');
+    }
+  });
+});
+
+app.get('/pay', function(req, res){
+  res.render('pay_form.ejs', { title: 'New Template Page', layout: true }); 
+});
+
+
+
+
+*/
+///////////////////////////////////////////////////////////////////
+//    DB EXAMPLES
+////////////////////////////////////////////////////////////////
+
 
 // examples....  (http://howtonode.org/node-js-and-mongodb-getting-started-with-mongojs)
 /*
@@ -39,7 +107,7 @@ db.users.update({email: "srirangan@gmail.com"}, {$set: {password: "iReallyLoveMo
 //var articleProvider = new ArticleProvider('localhost', 27017); //mongo host
 
 ///////////////////////////////////////////////////////////////////
-//    Server stuff
+//    Express server setup
 ////////////////////////////////////////////////////////////////
 
 
@@ -57,6 +125,8 @@ var app = express.createServer(
     scope:  'user_likes,user_photos,user_photo_video_tags,email,user_work_history,offline_access,location,friends,languages,user_website' //TODO: offline_access is deprecated now.
   })
 );
+
+//app.use(Session);
 
 //app.use(express.bodyParser()); //used to parse posted JSON //already there...
 
@@ -100,7 +170,7 @@ function render_page(req, res) {
 }
 
 ///////////////////////////////////////////////////////////////////
-//    FB connect
+//    FB connect  //http://howtonode.org/facebook-connect
 ////////////////////////////////////////////////////////////////
 
 function handle_facebook_request(req, res) {
@@ -147,7 +217,7 @@ function handle_facebook_request(req, res) {
 }
 
 ///////////////////////////////////////////////////////////////////
-//    Geo Location API V1
+//    Facebook user data fetch tries
 ////////////////////////////////////////////////////////////////
 
 app.get('/', handle_facebook_request);
@@ -240,9 +310,14 @@ function getElevation(lat,lng, callback){
       el_response = JSON.parse(data);
       callback(el_response.results[0].elevation); 
     }); 
-  })
-}
+  });
+};
 
+
+
+///////////////////////////////////////////////////////////////////
+//    FINI
+////////////////////////////////////////////////////////////////
 
 
 /*
@@ -257,7 +332,7 @@ var elevations= []
 };
 */
 
-
+})
 
 
 

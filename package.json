@@ -1,14 +1,14 @@
 {
-  "name":    "facebook-template-node",
+  "name":    "appastck",
   "version": "0.0.1",
 
-  "description": "Template app for Heroku / Facebook integration, Node.js language",
+  "description": "Basic app stack",
 
   "dependencies": {
    "geohash":    "0.0.1",
     "async":     "0.1.18",
     "ejs":       "0.4.3",
-    "express":   "2.4.6",
+    "express":   "2.5.1",
     "faceplate": "0.0.4",
     "googlemaps": "0.1.6",
     "mongodb":    ">= 0.9.6-7",

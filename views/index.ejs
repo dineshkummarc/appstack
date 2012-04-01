@@ -26,7 +26,63 @@
     <meta property="fb:app_id" content="<%= app.id %>" />
 
     <script type="text/javascript" src="/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="https://js.stripe.com/v1/"></script>
+    <script type="text/javascript">
+    ///////////////////////////////////////////////////////////////////
+    //    Payment Provider
+    ////////////////////////////////////////////////////////////////
+    var publicStripeApiKey = 'test';// " process.env.STRIPE_PUBLIC %>";
+    var publicStripeApiKeyTesting = 'test' ;//' process.env.STRIPE_PUBLIC_DEV %>';
 
+    Stripe.setPublishableKey(publicStripeApiKeyTesting);
+
+    function stripeResponseHandler (status, response) {
+      if (response.error) {
+        $('#error').text(response.error.message);
+        $('#error').slideDown(300);
+        $('#stripe-form .submit-button').removeAttr("disabled");
+        return;
+      }
+
+      var form = $("#payment-form");
+      form.append("<input type='hidden' name='stripeToken' value='" + response.id + "'/>");
+
+      $.post(
+        form.attr('action'),
+        form.serialize(),
+        function (status) {
+          if (status != 'ok') {
+            $('#error').text(status);
+            $('#error').slideDown(300);
+          }
+          else {
+            $('#error').hide();
+            $('#success').slideDown(300);
+          }
+          $('.submit-button').removeAttr("disabled");
+        }
+      );
+    }
+
+    // http://stripe.com/docs/tutorials/forms
+    $("#payment-form").submit(function(event) {
+      $('#error').hide();
+      // disable the submit button to prevent repeated clicks
+      $('.submit-button').attr("disabled", "disabled");
+
+      var amount = $('#cc-amount').val(); // amount you want to charge in cents
+      Stripe.createToken({
+        number: $('.card-number').val(),
+        cvc: $('.card-cvc').val(),
+        exp_month: $('.card-expiry-month').val(),
+        exp_year: $('.card-expiry-year').val()
+      }, amount, stripeResponseHandler);
+
+      // prevent the form from submitting with the default action
+      return false;
+    });
+    
+    </script>
     <script type="text/javascript">
       function logResponse(response) {
         if (console && console.log) {
@@ -265,6 +321,38 @@
         </li>
       </ul>
     </section>
+    
+    
+    
+    
+    
+    <section id="payment">
+    
+    <div id="stripe-form">
+      <form action="/plans/browserling_developer" method="POST" id="payment-form">
+        <div class="form-row">
+          <div class="cc-text">Card Number</div>
+          <input type="text" size="30" autocomplete="off" class="card-number"/>
+        </div>
+        <div class="form-row">
+          <div class="cc-text">CVC</div>
+          <input type="text" size="4" autocomplete="off" class="card-cvc"/>
+        </div>
+        <div class="form-row">
+          <div class="cc-text">Expiration (MM/YYYY)</div>
+          <input type="text" size="2" class="card-expiry-month"/>
+          <span> / </span>
+          <input type="text" size="4" class="card-expiry-year"/>
+        </div>
+        <input type="hidden" name="amount" value="2000" id="cc-amount">
+        <button type="submit" class="submit-button">Submit Payment</button>
+      </form>
+    </div>
+    <div id="error" class="hidden"></div>
+    <div id="success" class="hidden">Thanks for signing up at Browserling!</div>
+    
+    </section>
+    
   </body>
 </html>
 
