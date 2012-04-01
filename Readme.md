@@ -32,6 +32,13 @@ Launch the app with [Foreman](http://blog.daviddollar.org/2011/05/06/introducing
     foreman start  # then access it at http://127.0.0.1:5000/
 
 
+to Auto-restart the server:
+
+    gem install rerun
+    
+    then...
+    
+    rerun foreman start
 
 
 Deploy to Heroku directly

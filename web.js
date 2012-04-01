@@ -20,44 +20,7 @@ var db = require("mongojs").connect(databaseUrl, collections);
 
 
 
-///////////////////////////////////////////////////////////////////
-//    Payment Provider  //tut: http://www.catonmat.net/blog/stripe-payments-with-node/
-////////////////////////////////////////////////////////////////
 
-
-// FAULTY CODE HERE!!
-/*
-var stripe_secret = process.env.STRIPE_SECRET;
-var stripe_secret_dev = process.env.STRIPE_SECRET_DEV;
-
-var stripe = require('stripe')(stripe_secret_dev);  //maybe publi key goes here??
-
-app = express.createServer(express.bodyDecoder);
-
-app.post("/plans/browserling_developer", function(req, res) {
-  stripe.customers.create({
-    card : req.body.stripeToken,
-    email : "...", // customer's email (get it from db or session)
-    plan : "browserling_developer"
-  }, function (err, customer) {
-    if (err) {
-      var msg = customer.error.message || "unknown";
-      res.send("Error while processing your payment: " + msg);
-    }
-    else {
-      var id = customer.id;
-      console.log('Success! Customer with Stripe ID ' + id + ' just signed up!');
-      // save this customer to your database here!
-      res.send('ok');
-    }
-  });
-});
-
-app.get('/pay', function(req, res){
-  res.render('pay_form.ejs', { title: 'New Template Page', layout: true }); 
-});
-
-*/
 
 
 ///////////////////////////////////////////////////////////////////
@@ -99,6 +62,7 @@ var app = express.createServer(
   express.logger(),
   express.static(__dirname + '/public'),
   express.bodyParser(),
+  //express.bodyDecoder(), //for stripe??
   express.cookieParser(),
   // set this to a secret value to encrypt session cookies
   express.session({ secret: process.env.SESSION_SECRET || 'topsecret55887456' }),
@@ -108,6 +72,8 @@ var app = express.createServer(
     scope:  'user_likes,user_photos,user_photo_video_tags,email,user_work_history,offline_access,location,friends,languages,user_website' //TODO: offline_access is deprecated now.
   })
 );
+
+app.debug = true;
 
 //app.use(Session);
 
@@ -172,6 +138,44 @@ app.get('/emailme', function(req, res){  //testing route - should work locally a
   }, function(){
     res.send('email sent!'); //handle error callback??
   });
+});
+
+
+
+///////////////////////////////////////////////////////////////////
+//    Payment Provider  //tut: http://www.catonmat.net/blog/stripe-payments-with-node/
+////////////////////////////////////////////////////////////////
+
+// FAULTY CODE HERE!!??
+
+var stripe_secret = process.env.STRIPE_SECRET;
+var stripe_secret_dev = process.env.STRIPE_SECRET_DEV;
+
+var stripe = require('stripe')(stripe_secret_dev);  //maybe publi key goes here??
+
+//app = express.createServer(express.bodyDecoder);
+
+app.post("/plans/browserling_developer", function(req, res) {
+  stripe.customers.create({
+    card : req.body.stripeToken,
+    email : "...", // customer's email (get it from db or session)
+    plan : "test"  // this value has to be created on stripe.com as well...
+  }, function (err, customer) {
+    if (err) {
+      var msg = customer.error.message || "unknown";
+      res.send("Error while processing your payment: " + msg);
+    }
+    else {
+      var id = customer.id;
+      console.log('Success! Customer with Stripe ID ' + id + ' just signed up!');
+      // save this customer to your database here!
+      res.send('ok');
+    }
+  });
+});
+
+app.get('/pay', function(req, res){
+  res.render('pay_form.ejs', { title: 'New Template Page', layout: true }); 
 });
 
 

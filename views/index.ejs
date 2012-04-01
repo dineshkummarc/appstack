@@ -26,17 +26,23 @@
     <meta property="fb:app_id" content="<%= app.id %>" />
 
     <script type="text/javascript" src="/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/libs/jquery.min.js"></script>
     <script type="text/javascript" src="https://js.stripe.com/v1/"></script>
+    
     <script type="text/javascript">
-    ///////////////////////////////////////////////////////////////////
-    //    Payment Provider
-    ////////////////////////////////////////////////////////////////
-    var publicStripeApiKey = 'test';// " process.env.STRIPE_PUBLIC %>";
-    var publicStripeApiKeyTesting = 'test' ;//' process.env.STRIPE_PUBLIC_DEV %>';
+    var debug = <%= app.debug %>;
+    
+    function log(s){return console.log(s);} //shortcut
 
-    Stripe.setPublishableKey(publicStripeApiKeyTesting);
+    
+  ///////////////////////////////////////////////////////////////////
+ //    Payment Provider
+////////////////////////////////////////////////////////////////
+    var stripe_key = '<%= process.env.STRIPE_PUBLIC_DEV %>';
+    Stripe.setPublishableKey(stripe_key);
 
     function stripeResponseHandler (status, response) {
+      log(response);
       if (response.error) {
         $('#error').text(response.error.message);
         $('#error').slideDown(300);
@@ -64,32 +70,122 @@
       );
     }
 
-    // http://stripe.com/docs/tutorials/forms
-    $("#payment-form").submit(function(event) {
-      $('#error').hide();
-      // disable the submit button to prevent repeated clicks
-      $('.submit-button').attr("disabled", "disabled");
 
-      var amount = $('#cc-amount').val(); // amount you want to charge in cents
-      Stripe.createToken({
-        number: $('.card-number').val(),
-        cvc: $('.card-cvc').val(),
-        exp_month: $('.card-expiry-month').val(),
-        exp_year: $('.card-expiry-year').val()
-      }, amount, stripeResponseHandler);
+    $(function(){ //doc ready
+      // http://stripe.com/docs/tutorials/forms
+      $("#payment-form").submit(function(event) {
+        log('submit');
+        $('#error').hide();
+        // disable the submit button to prevent repeated clicks
+        $('.submit-button').attr("disabled", "disabled");
 
-      // prevent the form from submitting with the default action
-      return false;
-    });
+        var amount = $('#cc-amount').val(); // amount you want to charge in cents
+        Stripe.createToken({
+          number: $('.card-number').val(),
+          cvc: $('.card-cvc').val(),
+          exp_month: $('.card-expiry-month').val(),
+          exp_year: $('.card-expiry-year').val()
+        }, amount, stripeResponseHandler);
+
+        // prevent the form from submitting with the default action
+        return false;
+      });
+    })
+    
+    
+    
+    
+    
+      ///////////////////////////////////////////////////////////////////
+      //   garbage
+      ////////////////////////////////////////////////////////////////
+    
+    /*
+    
+    
+
+
+
+
+      $(function(){ //document ready!
+        log('document ready');
+        wireStripe();
+      });
+
+
+       function wireStripe(){
+        // http://stripe.com/docs/tutorials/forms
+        $("#payment-form").submit(function(event) {
+          $('#error').hide();
+          // disable the submit button to prevent repeated clicks
+          $('.submit-button').attr("disabled", "disabled");
+
+          var amount = $('#cc-amount').val(); // amount you want to charge in cents
+          Stripe.createToken({
+            number: $('.card-number').val(),
+            cvc: $('.card-cvc').val(),
+            exp_month: $('.card-expiry-month').val(),
+            exp_year: $('.card-expiry-year').val()
+          }, amount, stripeResponseHandler);
+
+          // prevent the form from submitting with the default action
+          return false;
+        });//eo submit
+      }//eo wirestripe function
+      
+
+
+      function stripeResponseHandler (status, response) {
+        if (response.error) {
+          log('error with stripe...')
+          $('#error').text(response.error.message);
+          $('#error').slideDown(300);
+          $('#stripe-form .submit-button').removeAttr("disabled");
+          return;
+        } //end if
+      
+
+         var STRIPE_PUBLIC = '<%= process.env.STRIPE_PUBLIC %>';// " process.env.STRIPE_PUBLIC %>";
+          var STRIPE_PUBLIC_DEV = '<%= process.env.STRIPE_PUBLIC_DEV %>' ;//' process.env.STRIPE_PUBLIC_DEV %>';
+      
+        log('stripe: '+STRIPE_PUBLIC_DEV);
+        Stripe.setPublishableKey( STRIPE_PUBLIC_DEV );
+          var form = $("#payment-form");
+          form.append("<input type='hidden' name='stripeToken' value='" + response.id + "'/>");
+
+          $.post(
+            form.attr('action'),
+            form.serialize(),
+            function (status) {
+              if (status != 'ok') {
+                $('#error').text(status);
+                $('#error').slideDown(300);
+              }
+              else {
+                $('#error').hide();
+                $('#success').slideDown(300);
+              }
+              $('.submit-button').removeAttr("disabled");
+            }
+          ); //eo post
+        
+        } //eo handler
+        
+       */
+
+      
+        
     
     </script>
     <script type="text/javascript">
+   /*
       function logResponse(response) {
         if (console && console.log) {
-          console.log('The response was', response);
-        }
-      }
-
+          //console.log('The response was', response);
+          console.log(response);
+      }*/
+      function logResponse(response){return log(response)}
+      
       $(function(){
         // Set up so we handle click on the buttons
         $('#postToWall').click(function() {
@@ -134,18 +230,13 @@
                 logResponse(response);
               }
             }
-          );
-        });
-      });
+          )}); //eo click...
+        
+      }); //eo dom ready
+      
     </script>
 
-    <!--[if IE]>
-      <script type="text/javascript">
-        var tags = ['header', 'section'];
-        while(tags.length)
-          document.createElement(tags.pop());
-      </script>
-    <![endif]-->
+  
   </head>
   <body>
     <div id="fb-root"></div>
@@ -349,7 +440,7 @@
       </form>
     </div>
     <div id="error" class="hidden"></div>
-    <div id="success" class="hidden">Thanks for signing up at Browserling!</div>
+    <div id="success" class="hidden">Thanks for signing up at Browserling222!</div>
     
     </section>
     
