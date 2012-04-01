@@ -19,6 +19,10 @@ var db = require("mongojs").connect(databaseUrl, collections);
 db.users.ensureIndex({id:1});  //info: http://www.mongodb.org/display/DOCS/Indexes
 
 
+//geo loc indexes
+db.users.ensureIndex({'home.loc': '2d' }); 
+db.users.ensureIndex({'work.loc': '2d' }); 
+
 
 
 
@@ -143,8 +147,7 @@ var stripe = require('stripe')(stripe_secret_dev); //maybe publi key goes here??
 app.post("/plans/browserling_developer", function (req, res) {
     stripe.customers.create({
         card: req.body.stripeToken,
-        email: "...",
-        // customer's email (get it from db or session)
+        email: req.session.email, //  // customer's email (get it from db or session)"...",
         plan: "test" // this value has to be created on stripe.com as well...
     }, function (err, customer) {
         if (err) {
@@ -158,6 +161,15 @@ app.post("/plans/browserling_developer", function (req, res) {
         }
     });
 });
+
+
+/*
+app.get('/aaa', function (req, res) {
+    // returns current user DATA in JSON.
+    //req.session.test = "fat cat";
+    res.send('data22aaaa'); //plain json
+});*/
+
 
 app.get('/pay', function (req, res) {
     res.render('pay_form.ejs', {
@@ -220,11 +232,7 @@ function handle_facebook_request(req, res) {
 ///////////////////////////////////////////////////////////////////
 //    Facebook user data fetch tries
 ////////////////////////////////////////////////////////////////
-app.get('aaa', function (req, res) {
-    // returns current user DATA in JSON.
-    //req.session.test = "fat cat";
-    res.send('data22aaaa'); //plain json
-});
+
 
 
 app.get('/', handle_facebook_request);
@@ -252,7 +260,7 @@ app.get('/friends', function (req, res) {
         limit: 5000
     }, function (friends) {
         //res.send('friends: ' + require('util').inspect(friends));
-        res.send(data); //plain json
+        res.send(friends); //plain json
     });
 });
 
@@ -263,7 +271,7 @@ app.get('/me', function (req, res) {
     });
 });
 
-app.get('/me5', function (req, res) {
+app.get('/me2', function (req, res) {
     req.facebook.get('/me', {
         fields: 'email, name, locale, work, languages, education, location, website,friends'
     }, function (data) {
@@ -271,7 +279,7 @@ app.get('/me5', function (req, res) {
         res.send(data); //plain json
     });
 });
-
+/*
 app.get('/me2', function (req, res) {
     req.facebook.get('/me', {
         fields: 'email, name, locale, work, languages, education, location, website,friends'
@@ -303,7 +311,7 @@ app.post('/api/setCity', function (req, res) {
     }, function (err) {
         // the update is complete
     });
-});
+});*/
 
 
 ///////////////////////////////////////////////////////////////////
@@ -311,8 +319,8 @@ app.post('/api/setCity', function (req, res) {
 ////////////////////////////////////////////////////////////////
 
 
-
-app.get('/u/ensuresession', function(req, res){ // sets session ID according to FB id
+/*
+app.get('/ensuresession', function(req, res){ // sets session ID according to FB id
   if( (! req.session.uid) || (req.session.uid == undefined)){
     req.facebook.get('/me', { fields: 'id'}, function(data) {
         var id =  data.id ; //plain str
@@ -323,19 +331,54 @@ app.get('/u/ensuresession', function(req, res){ // sets session ID according to 
     id = req.session.uid ;
     res.send( id ); //res.send('uid = '+ ' (session...)' + id );
   }
-});
+});*/
 
 
-app.get('api/getuser', function(req, res){ // fetch data on facebook for our user, saves it to the database.
+function ensureSession(req, res, callback){  // make sure that user is connected, and session are set
+  // TODO, make sure the FB token exists as well, if not, redirect to homepage, don't call the callback...
+  if( (! req.session.uid) || (req.session.uid == undefined)){
+    req.facebook.get('/me', { fields: 'id'}, function(data) {
+        var id =  data.id ; //plain str
+        req.session.uid = id;
+       console.log('uid (FB just setted) = ' + id );
+       callback(req, res);
+      });
+  }else{
+    console.log('uid = '+ ' (session...)' + id );
+    callback(req, res);
+    // id = req.session.uid ;
+    
+  }
+}
+
+
+
+/*
+app.get('/aaa', function (req, res) {
+    // returns current user DATA in JSON.
+    //req.session.test = "fat cat";
+    res.send('data22aaaa'); //plain json
+});*/
+
+app.get('/user', function(req, res){ // fetch data on facebook for our user, saves it to the database.
   
+  
+  // res.send('user');
   // if no facebook token, return error, ask to login...
   
   // 1.
   // check if user exist... (poll mongo...)
-  
-  
-  
-  var uid = req.session.uid;
+  // var uid = req.session.uid;
+
+/*
+   db.users.find({id: uid}, function(err, users) {
+     if( err || !users) console.log("No female users found");
+     else users.forEach( function(femaleUser) {
+       console.log(femaleUser);
+     } );
+   });*/
+   
+   
   async.parallel([
     function (cb) {
         // query 4 friends and send them to the socket for this socket id
@@ -370,8 +413,8 @@ app.get('api/getuser', function(req, res){ // fetch data on facebook for our use
         });
     }], function () { //Once we received all data from FB...
         
-        var id = req.me.id
-        req.session.uid = id;
+
+        //create user object to be inserted
         var user = {
             id: id,
             email: req.me.email, 
@@ -390,36 +433,55 @@ app.get('api/getuser', function(req, res){ // fetch data on facebook for our use
             else console.log("User saved");
           });
       
+      
+      
+      
+      
+          // set sessions
+          var id = req.me.id
+          req.session.uid = id;
+          req.session.email = req.me.email;
+          
+          
         res.send(user);
         //render_page(req, res);
-    }); //eo async fb fetch
+    }); //eo async fb callback
   
 });
 
 
-//   /api/setlocation/laval/montreal
-//app.get('api/setlocation/:home/:work', function(req, res){ // fetch data on facebook for our user, saves it to the database.
- app.get('/e', function(req, res){ // fetch data on facebook for our user, saves it to the database.
+//   /api/setlocation/?home=laval&work=montreal
+// http://127.0.0.1:5000/api/setlocation?home=laval&work=montreal
+
+//app.get('api/setlocation', function(req, res){ // fetch data on facebook for our user, saves it to the database.
+ app.get('/setlocation', function(req, res){ // fetch data on facebook for our user, saves it to the database.
  
-  
+ // TODO: ENsure user is logged!
+ 
+  ///:home/:work
   async.parallel([ // call google-maps for both addresses async
     function (cb) {
-        gm.geocode(req.param("home"), function (err, data) {
+        gm.geocode(req.param("home") || 'montreal', function (err, data) {
             req.home = data.results[0];
+            req.home['loc'] = [req.home.geometry.location.lng, req.home.geometry.location.lat];//for geospatial indexing
+            cb();
             //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
             //res.send(coords);
         });
     }, function (cb) {
-      gm.geocode(req.param("work"), function (err, data) {
+      gm.geocode(req.param("work") || 'toronto', function (err, data) {
           req.work = data.results[0];
+          req.work['loc'] = [req.work.geometry.location.lng, req.work.geometry.location.lat]; //for geospatial indexing
+          cb();
           //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
           //res.send(coords);
       });
     },
     function (cb) {
       // exports.distance = function(origins, destinations, callback, sensor, mode, alternatives, avoid, units, language){
-      gm.distance(req.param("work"), function (err, data) {
-        req.commute = data;
+      gm.distance(req.param("home")|| 'montreal', req.param("work")|| 'toronto', function (err, data) {
+        req.commute = data.rows[0].elements[0]; //only keep distance + duration.
+        cb();
           //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
           //res.send(coords);
       });
@@ -431,14 +493,21 @@ app.get('api/getuser', function(req, res){ // fetch data on facebook for our use
                 commute: req.commute,
                 updated: new Date()
               }
-
+              
+              var uid = req.session.uid;
+              db.users.update({id: uid}, {$set: {loc: loc}}, function(err, updated) {
+                if( err || !updated ) console.log("User not updated: "+req.session.uid);
+                else console.log("User updated");
+              });
+              
+/*
               db.users.put(loc, function(err, saved) {
                 if( err || !saved ) console.log("User not saved");
                 else console.log("User saved");
-              });
+              });*/
 
             res.send(loc);
-            //we should instead return
+            
         });//eo parrallel calls
       
   
