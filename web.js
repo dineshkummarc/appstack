@@ -29,34 +29,6 @@ db.users.ensureIndex({
 });
 
 
-
-
-///////////////////////////////////////////////////////////////////
-//    DB EXAMPLES
-////////////////////////////////////////////////////////////////
-// examples....  (http://howtonode.org/node-js-and-mongodb-getting-started-with-mongojs)
-/*
-db.users.find({sex: "female"}, function(err, users) {
-  if( err || !users) console.log("No female users found");
-  else users.forEach( function(femaleUser) {
-    console.log(femaleUser);
-  } );
-});
-
-db.users.save({email: "srirangan@gmail.com", password: "iLoveMongo", sex: "male"}, function(err, saved) {
-  if( err || !saved ) console.log("User not saved");
-  else console.log("User saved");
-});
-
-db.users.update({email: "srirangan@gmail.com"}, {$set: {password: "iReallyLoveMongo"}}, function(err, updated) {
-  if( err || !updated ) console.log("User not updated");
-  else console.log("User updated");
-});
-*/
-
-
-//var ArticleProvider = require('./articleprovider-mongodb').ArticleProvider;
-//var articleProvider = new ArticleProvider('localhost', 27017); //mongo host
 ///////////////////////////////////////////////////////////////////
 //    Express server setup
 ////////////////////////////////////////////////////////////////
@@ -75,12 +47,9 @@ express.session({
     //NOTE: SCOPE is set on CLIENT SIDE TOKEN!
 }));
 
-app.debug = true;
+app.debug = true; // a silly attempt to centralized that...
 
-//app.use(Session);
-//app.use(express.bodyParser()); //used to parse posted JSON //already there...
-// listen to the PORT given to us in the environment
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 3000; // listen to the PORT given to us in the environment
 
 app.listen(port, function () {
     console.log("Listening on " + port);
@@ -146,7 +115,7 @@ var stripe_secret = process.env.STRIPE_SECRET;
 var stripe_secret_dev = process.env.STRIPE_SECRET_DEV;
 
 var stripe = require('stripe')(stripe_secret_dev); //maybe publi key goes here??
-//app = express.createServer(express.bodyDecoder);
+
 app.post("/plans/browserling_developer", function (req, res) {
     stripe.customers.create({
         card: req.body.stripeToken,
@@ -166,15 +135,6 @@ app.post("/plans/browserling_developer", function (req, res) {
     });
 });
 
-
-/*
-app.get('/aaa', function (req, res) {
-    // returns current user DATA in JSON.
-    //req.session.test = "fat cat";
-    res.send('data22aaaa'); //plain json
-});*/
-
-
 app.get('/pay', function (req, res) {
     res.render('pay_form.ejs', {
         title: 'New Template Page',
@@ -187,7 +147,7 @@ app.get('/pay', function (req, res) {
 ///////////////////////////////////////////////////////////////////
 //    FB connect  //http://howtonode.org/facebook-connect
 ////////////////////////////////////////////////////////////////
-function handle_facebook_request(req, res) {
+function handle_facebook_request(req, res) { // default facebook example, Do some fetches on facebook graph asyncrounously
 
     // if the user is logged in
     if (req.facebook.token) {
@@ -262,85 +222,51 @@ app.get('/friends', function (req, res) {
     req.facebook.get('/me/friends', {
         limit: 5000
     }, function (friends) {
-        //res.send('friends: ' + require('util').inspect(friends));
         res.send(friends); //plain json
     });
 });
 
 app.get('/me', function (req, res) {
-    req.facebook.get('/me', {}, function (data) {
-        //res.send('friends: ' + require('util').inspect(data));
+    req.facebook.get('/me', {
+        fields: 'email, name, locale, work, languages, education, location, website,friends'
+    }, function (data) {
         res.send(data); //plain json
     });
 });
 
-app.get('/me2', function (req, res) {
-    req.facebook.get('/me', {
-        fields: 'email, name, locale, work, languages, education, location, website,friends'
-    }, function (data) {
-        //res.send('' + require('util').inspect(data));
-        res.send(data); //plain json
-    });
-});
-/*
-app.get('/me2', function (req, res) {
-    req.facebook.get('/me', {
-        fields: 'email, name, locale, work, languages, education, location, website,friends'
-    }, function (data) {
-        //res.send('' + require('util').inspect(data));
-        res.send(data); //plain json
-    });
-});
-
-app.get('/me3', function (req, res) {
-    req.facebook.get('/me', {
-        fields: 'email, name, locale, work, languages, education, location, website,friends'
-    }, function (data) {
-        //res.send('' + require('util').inspect(data));
-        res.send(data); //plain json
-    });
-});
-
-app.post('/api/setCity', function (req, res) {
-    var id = '12345'
-    db.users.update({
-        id: id
-    }, {
-        $inc: {
-            level: 1
-        }
-    }, {
-        multi: false
-    }, function (err) {
-        // the update is complete
-    });
-});*/
 
 
 ///////////////////////////////////////////////////////////////////
-//    USER methods
+//    USER data, and facebook fetching
 ////////////////////////////////////////////////////////////////
-
+app.get('/user', function (req, res) { // fetch data on facebook for our user, saves it to the database.
+    ensureSession(req, res, function () {
+        db.users.find({
+            id: req.session.uid
+        }, function (err, users) { // check if user exist... (poll mongo...)
+            if (err || !users || (users.length ==0)) { //the dude's note on file
+                console.log("No user found...");
+                fetchFbUserDate(req, res, function () {
+                    console.log("FB2 callback!");
+                    res.send(req.user); //the user will have been populated by FB.
+                }); //eo fb fetch
+            } else {
+                console.log("FOUND THE GUY ON FILE!!!" + users.length);
+                res.send(users[0]); //the matching record from MOngo
+            }
+        }); //eo db search
+    }); //eo ensure session
+    console.log('Session ID : ' + req.session.uid);
+}); //eo route
 
 app.get('/ensuresession', function (req, res) { // sets session ID according to FB id
     console.log('ensuresession! + ' + req.session.uid);
-    /*
-  if( (! req.session.uid) || (req.session.uid == undefined)){
-    req.facebook.get('/me', { fields: 'id'}, function(data) {
-        var id =  data.id ; //plain str
-        req.session.uid = id;
-        res.send(id); //res.send('uid (FB just setted) = ' + id );
-      });
-  }else{
-    id = req.session.uid ;
-    res.send( id ); //res.send('uid = '+ ' (session...)' + id );
-  }
-  */
     ensureSession(req, res, function () {
         console.log('CALL BAKC ENSURED! + ' + req.session.uid);
         res.send(req.session.uid);
     });
 });
+
 
 function ensureFacebook(req, res, callback) {
     // if no facebook token, return error, ask to login...
@@ -372,28 +298,6 @@ function ensureSession(req, res, callback) { // make sure that user is connected
         }
     });
 }
-
-app.get('/user', function (req, res) { // fetch data on facebook for our user, saves it to the database.
-    ensureSession(req, res, function () {
-        db.users.find({
-            id: req.session.uid
-        }, function (err, users) { // check if user exist... (poll mongo...)
-            if (err || !users || (users.length ==0)) { //the dude's note on file
-                console.log("No user found...");
-                fetchFbUserDate(req, res, function () {
-                    console.log("FB2 callback!");
-                    res.send(req.user); //the user will have been populated by FB.
-                }); //eo fb fetch
-            } else {
-                console.log("FOUND THE GUY ON FILE!!!" + users.length);
-                res.send(users[0]); //the matching record from MOngo
-            }
-        }); //eo db search
-    }); //eo ensure session
-    console.log('Session ID : ' + req.session.uid);
-}); //eo route
-
-
 
 
 function outputUser(req, res) { //set the sessions value according to FB data or FB, and output the thing to client
@@ -464,41 +368,35 @@ function fetchFbUserDate(req, res, callback) { //Only for the first time, or whe
             else console.log("User saved");
         });
         
-
     }); //eo async fb callback
 } //eo function
 
 
 
-
+///////////////////////////////////////////////////////////////////
+//    USER SET LOCATION Location API V1
+////////////////////////////////////////////////////////////////
 //   /api/setlocation/?home=laval&work=montreal
 app.get('/setlocation', function (req, res) { // fetch data on facebook for our user, saves it to the database.
     // TODO: ENsure user is logged!
   ensureSession(req, res, function(){
     async.parallel([ // call google-maps for both addresses async
     function (cb) {
-        gm.geocode(req.param("home") || 'montreal', function (err, data) {
+        gm.geocode(req.param("home") || 'Oakland', function (err, data) {//return the geometry of the top matching location...
             req.home = data.results[0];
             req.home['loc'] = [req.home.geometry.location.lng, req.home.geometry.location.lat]; //for geospatial indexing
             cb();
-            //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
-            //res.send(coords);
         });
     }, function (cb) {
-        gm.geocode(req.param("work") || 'toronto', function (err, data) {
+        gm.geocode(req.param("work") || 'San Francisco', function (err, data) {
             req.work = data.results[0];
             req.work['loc'] = [req.work.geometry.location.lng, req.work.geometry.location.lat]; //for geospatial indexing
             cb();
-            //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
-            //res.send(coords);
         });
     }, function (cb) {
-        // exports.distance = function(origins, destinations, callback, sensor, mode, alternatives, avoid, units, language){
         gm.distance(req.param("home") || 'montreal', req.param("work") || 'toronto', function (err, data) {
             req.commute = data.rows[0].elements[0]; //only keep distance + duration.
             cb();
-            //var coords = data.results[0].geometry.location; //return the geometry of the top matching location...
-            //res.send(coords);
         });
     }], function () { //Once we received all data from FB...
         var loc = {
@@ -507,7 +405,6 @@ app.get('/setlocation', function (req, res) { // fetch data on facebook for our 
             commute: req.commute,
             updated: new Date()
         }
-
         var uid = req.session.uid;
         db.users.update({id: uid}, { $set: { loc: loc }}, function (err, updated) {
             if (err || !updated) console.log("User not updated: " + req.session.uid);
@@ -572,6 +469,30 @@ function getElevation(lat, lng, callback) {
         });
     });
 };
+
+
+///////////////////////////////////////////////////////////////////
+//    DB EXAMPLES
+////////////////////////////////////////////////////////////////
+// examples....  (http://howtonode.org/node-js-and-mongodb-getting-started-with-mongojs)
+/*
+db.users.find({sex: "female"}, function(err, users) {
+  if( err || !users) console.log("No female users found");
+  else users.forEach( function(femaleUser) {
+    console.log(femaleUser);
+  } );
+});
+
+db.users.save({email: "srirangan@gmail.com", password: "iLoveMongo", sex: "male"}, function(err, saved) {
+  if( err || !saved ) console.log("User not saved");
+  else console.log("User saved");
+});
+
+db.users.update({email: "srirangan@gmail.com"}, {$set: {password: "iReallyLoveMongo"}}, function(err, updated) {
+  if( err || !updated ) console.log("User not updated");
+  else console.log("User updated");
+});
+*/
 
 
 
