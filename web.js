@@ -202,6 +202,8 @@ function handle_facebook_request(req, res) { // default facebook example, Do som
 app.get('/', handle_facebook_request);
 app.post('/', handle_facebook_request);
 app.get('/location', handle_facebook_request);
+app.get('/commute', handle_facebook_request);
+app.get('/promo', handle_facebook_request);
 app.get('/driver', handle_facebook_request);
 app.get('/passenger', handle_facebook_request);
 app.get('/driver/:user_id', handle_facebook_request);

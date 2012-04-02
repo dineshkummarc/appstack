@@ -8,8 +8,8 @@ $(function(){
       app.user = new User(data);
       $('body').addClass('logged').removeClass('not-logged');
       app.router = new FRouter();
-      var route_has_run = Backbone.history.start({pushState: true});
-      
+      var route_has_run = Backbone.history.start({pushState: false});
+      log(Backbone);
       if(!route_has_run) app.router.navigate('home', {trigger: true});
       
       
