@@ -1,127 +1,179 @@
 <!DOCTYPE html>
-<html class="no-js" lang="en"  xmlns:fb="http://ogp.me/ns/fb#">
+<html xmlns:fb="http://ogp.me/ns/fb#" lang="en">
   <head>
-    <meta charset="utf-8">
-  	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="description" content="">
-  	<meta name="author" content="">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes" />
+
     <title><%= app.name %></title>
-    
-     <!-- These are Open Graph tags.  They add meta data to your  -->
-      <!-- site that facebook uses when your content is shared     -->
-      <!-- over facebook.  You should fill these tags in with      -->
-      <!-- your data.  To learn more about Open Graph, visit       -->
-      <!-- 'https://developers.facebook.com/docs/opengraph/'       -->
-      <meta property="og:title" content="<%= app.name %>" />
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content="<%= url() %>" />
-      <meta property="og:image" content="<%= url('/logo.png') %>" />
-      <meta property="og:site_name" content="<%= app.name %>" />
-      <meta property="og:description" content="My first app" />
-      <meta property="fb:app_id" content="<%= app.id %>" />
-        <!--[if IEMobile]>
-        <link rel="stylesheet" href="mobile.css" media="screen" type="text/css"  />
-        <![endif]-->
-    
-  <!--/////////////////////////////////////////////////////////////////
- //       CSS
-////////////////////////////////////////////////////////////////-->
+    <link rel="stylesheet" href="stylesheets/screen.css" media="Screen" type="text/css" />
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-width: 480px), only screen and (max-device-width: 480px)" type="text/css" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <link rel="stylesheet" href="fb_template/fb_template.css" media="Screen" type="text/css" />
-    <link rel="stylesheet" href="fb_template/fb_template_mobile.css" media="handheld, only screen and (max-width: 480px), only screen and (max-device-width: 480px)" type="text/css" />-->
+    <!--[if IEMobile]>
+    <link rel="stylesheet" href="mobile.css" media="screen" type="text/css"  />
+    <![endif]-->
 
-  
-   
+    <!-- These are Open Graph tags.  They add meta data to your  -->
+    <!-- site that facebook uses when your content is shared     -->
+    <!-- over facebook.  You should fill these tags in with      -->
+    <!-- your data.  To learn more about Open Graph, visit       -->
+    <!-- 'https://developers.facebook.com/docs/opengraph/'       -->
+    <meta property="og:title" content="<%= app.name %>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="<%= url() %>" />
+    <meta property="og:image" content="<%= url('/logo.png') %>" />
+    <meta property="og:site_name" content="<%= app.name %>" />
+    <meta property="og:description" content="My first app" />
+    <meta property="fb:app_id" content="<%= app.id %>" />
 
-
-    <!-- FONTS  -->
-    <link rel="stylesheet" href="/fonts/lekton/stylesheet.css">
-    <link rel="stylesheet" href="/fonts/droid_sans/stylesheet.css">
-    <link rel="stylesheet" href="/fonts/droid_serif/stylesheet.css">
-
-    <!-- LESS styles (bootstrap)  
-    <link rel="stylesheet/less" href="/less/reset.less">
-    <link rel="stylesheet/less" href="/less/bootstrap.less">
-    <link rel="stylesheet/less" href="/less/buttons.less">
-    <link rel="stylesheet/less" href="/less/forms.less">-->
-
-    <!-- CSS  Bootstrap -->
-    <link rel="stylesheet" href="/css/bootstrap.css">
-    <link rel="stylesheet" href="/less/responsive.css">
-    <!--Compile with this command: 
-    lessc ./less/bootstrap.less > ./css/bootstrap.css
-    -->
-
-
-
-  <!--/////////////////////////////////////////////////////////////////
- //        JavaScript
-////////////////////////////////////////////////////////////////-->
-
-
-   <!-- <script type="text/javascript" src="https://js.stripe.com/v1/"></script> --> 
-   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-
-  	<script src="/js/libs/LAB.min.js"></script> <!--  Script Loader-->
-  	<script type="text/javascript">
-    var minification = false;
-    var debug = (window.location.hostname == '127.0.0.1');
-      $LAB
-      // LIBS
-      .script("/js/libs/modernizr-2.5.3.min.js").wait() 
-      //.script("/js/libs/jquery-1.7.1.min.js").wait()
-      //.script("/js/libs/less-1.3.0.min.js")
-      //.script("/js/libs/prefixfree.min.js")
-      //.script("/js/libs/prefixfree.dynamic-dom.js")
-      //.script("/js/libs/pretty.js")
-      // .script("/js/downloadify.min.js")  //download in background...
-      // .script("/js/libs/fullscreenApi.js")
-      .script("https://js.stripe.com/v1/")
-      .script("/js/libs/jquery.cookie.js")
-      .script("/js/libs/jquery.sharrre-1.2.0.min.js")
-      .script("/js/libs/jquery.cuteTime.min.js")
-      .script("/js/libs/underscore.js") 
-      .script("/js/libs/json2.js") //.wait() 
-      .script("/js/libs/sha.js").wait()
-      .script("/js/libs/backbone.js").wait() 
-      // .script("/js/libs/backbone.localStorage.modified.js").wait() // Overide the Sync method, AGAIN!...
-      .script("/js/libs/backbone.analytics.js").wait()
-      
-      // Bootstrap
-      .script("/js/libs/bootstrap.min.js")
-
-      // APP
-      .script("/js/app/stripe_setup.js")
-      .script("/js/app/router.js")
-      .script("/js/app/user.js")
-      .wait()
-      .script("/js/app/start.js")// instanciation and configuration of main objets
-
-   
-
-   </script>
-    
-
-
-
-    
-    
-    
-    
-    
-
-    
+    <script type="text/javascript" src="/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/libs/jquery.min.js"></script>
+    <script type="text/javascript" src="https://js.stripe.com/v1/"></script>
     
     <script type="text/javascript">
     var debug = <%= app.debug %>;
-    stripe_key = '<%= process.env.STRIPE_PUBLIC_DEV %>'; //required in a script...
-    
-    
     
     function log(s){return console.log(s);} //shortcut
 
+    
+  ///////////////////////////////////////////////////////////////////
+ //    Payment Provider
+////////////////////////////////////////////////////////////////
+    var stripe_key = '<%= process.env.STRIPE_PUBLIC_DEV %>';
+    Stripe.setPublishableKey(stripe_key);
 
+    function stripeResponseHandler (status, response) {
+      log(response);
+      if (response.error) {
+        $('#error').text(response.error.message);
+        $('#error').slideDown(300);
+        $('#stripe-form .submit-button').removeAttr("disabled");
+        return;
+      }
+
+      var form = $("#payment-form");
+      form.append("<input type='hidden' name='stripeToken' value='" + response.id + "'/>");
+
+      $.post(
+        form.attr('action'),
+        form.serialize(),
+        function (status) {
+          if (status != 'ok') {
+            $('#error').text(status);
+            $('#error').slideDown(300);
+          }
+          else {
+            $('#error').hide();
+            $('#success').slideDown(300);
+          }
+          $('.submit-button').removeAttr("disabled");
+        }
+      );
+    }
+
+
+    $(function(){ //doc ready
+      // http://stripe.com/docs/tutorials/forms
+      $("#payment-form").submit(function(event) {
+        log('submit');
+        $('#error').hide();
+        // disable the submit button to prevent repeated clicks
+        $('.submit-button').attr("disabled", "disabled");
+
+        var amount = $('#cc-amount').val(); // amount you want to charge in cents
+        Stripe.createToken({
+          number: $('.card-number').val(),
+          cvc: $('.card-cvc').val(),
+          exp_month: $('.card-expiry-month').val(),
+          exp_year: $('.card-expiry-year').val()
+        }, amount, stripeResponseHandler);
+
+        // prevent the form from submitting with the default action
+        return false;
+      });
+    })
+    
+    
+    
+    
+    
+      ///////////////////////////////////////////////////////////////////
+      //   garbage
+      ////////////////////////////////////////////////////////////////
+    
+    /*
+    
+    
+
+
+
+
+      $(function(){ //document ready!
+        log('document ready');
+        wireStripe();
+      });
+
+
+       function wireStripe(){
+        // http://stripe.com/docs/tutorials/forms
+        $("#payment-form").submit(function(event) {
+          $('#error').hide();
+          // disable the submit button to prevent repeated clicks
+          $('.submit-button').attr("disabled", "disabled");
+
+          var amount = $('#cc-amount').val(); // amount you want to charge in cents
+          Stripe.createToken({
+            number: $('.card-number').val(),
+            cvc: $('.card-cvc').val(),
+            exp_month: $('.card-expiry-month').val(),
+            exp_year: $('.card-expiry-year').val()
+          }, amount, stripeResponseHandler);
+
+          // prevent the form from submitting with the default action
+          return false;
+        });//eo submit
+      }//eo wirestripe function
+      
+
+
+      function stripeResponseHandler (status, response) {
+        if (response.error) {
+          log('error with stripe...')
+          $('#error').text(response.error.message);
+          $('#error').slideDown(300);
+          $('#stripe-form .submit-button').removeAttr("disabled");
+          return;
+        } //end if
+      
+
+         var STRIPE_PUBLIC = '<%= process.env.STRIPE_PUBLIC %>';// " process.env.STRIPE_PUBLIC %>";
+          var STRIPE_PUBLIC_DEV = '<%= process.env.STRIPE_PUBLIC_DEV %>' ;//' process.env.STRIPE_PUBLIC_DEV %>';
+      
+        log('stripe: '+STRIPE_PUBLIC_DEV);
+        Stripe.setPublishableKey( STRIPE_PUBLIC_DEV );
+          var form = $("#payment-form");
+          form.append("<input type='hidden' name='stripeToken' value='" + response.id + "'/>");
+
+          $.post(
+            form.attr('action'),
+            form.serialize(),
+            function (status) {
+              if (status != 'ok') {
+                $('#error').text(status);
+                $('#error').slideDown(300);
+              }
+              else {
+                $('#error').hide();
+                $('#success').slideDown(300);
+              }
+              $('.submit-button').removeAttr("disabled");
+            }
+          ); //eo post
+        
+        } //eo handler
+        
+       */
+
+      
         
     
     </script>
@@ -186,7 +238,7 @@
 
   
   </head>
-  <body class="not-logged">
+  <body>
     <div id="fb-root"></div>
     <script type="text/javascript">
       window.fbAsyncInit = function() {
@@ -225,68 +277,6 @@
         fjs.parentNode.insertBefore(js, fjs);
       }(document, 'script', 'facebook-jssdk'));
     </script>
-
-
-
-    
-<!--  navbar -->
-  <div class="navbar navbar-fixed-top">
-    <div class="navbar-inner">
-          <div class="container">
-            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </a>
-            <a class="brand" href="/">Project name</a>
-            <div class="nav-collapse">
-              <ul class="nav">
-                <li class="active"><a href="/#">Home</a></li>
-                <li><a href="/#location">My Commute</a></li>
-                <li><a href="/#dashboard">Dashboard</a></li>
-                <li><a href="#">Link</a></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#">Action</a></li>
-                    <li><a href="#">Another action</a></li>
-                    <li><a href="#">Something else here</a></li>
-                    <li class="divider"></li>
-                    <li class="nav-header">Nav header</li>
-                    <li><a href="#">Separated link</a></li>
-                    <li><a href="#">One more separated link</a></li>
-                  </ul>
-                </li>
-              </ul>
-              <form class="navbar-search pull-left" action="">
-                <input type="text" class="search-query span2" placeholder="Search">
-              </form>
-              <ul class="nav pull-right">
-                <li><a href="#">Link</a></li>
-                <li class="divider-vertical"></li>
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#">Action</a></li>
-                    <li><a href="#">Another action</a></li>
-                    <li><a href="#">Something else here</a></li>
-                    <li class="divider"></li>
-                    <li><a href="#">Separated link</a></li>
-                  </ul>
-                </li>
-              </ul>
-            </div><!-- /.nav-collapse -->
-          </div>
-        </div>
-      </div>
-      <!-- eo navbar -->
-
-
-
-
-<div class="container">
-
-
 
     <header class="clearfix">
       <% if (user) { %>
@@ -476,7 +466,7 @@
         <section id="payment">
     
     <div id="stripe-form">
-      <form action="/plans/browserling_developer" method="POST" id="payment-form" class="well">
+      <form action="/plans/browserling_developer" method="POST" id="payment-form">
         <div class="form-row">
           <div class="cc-text">Card Number</div>
           <input type="text" size="30" autocomplete="off" class="card-number"/>
@@ -499,15 +489,6 @@
     <div id="success" class="hidden">Thanks for signing up at Browserling222!</div>
     
     </section>
-    </div><!-- eo container -->
-    
-    <script>
-    	var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
-    	(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    	g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    	s.parentNode.insertBefore(g,s)}(document,'script'));
-    </script>
-    
     
   </body>
 </html>
