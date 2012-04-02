@@ -75,10 +75,12 @@ app.dynamicHelpers({
     },
 });
 
+
+
 function render_page(req, res) {
     req.facebook.app(function (app) {
         req.facebook.me(function (user) {
-            res.render('index.ejs', {
+            res.render('fb_test.ejs', {
                 layout: false,
                 req: req,
                 app: app,
@@ -88,6 +90,14 @@ function render_page(req, res) {
     });
 }
 
+
+function index(req, res){  //TODO: MAKE the delivery 100% static, no node processing.
+  res.render('index.ejs', {
+      layout: false,
+      req: req,
+      app: app
+  });
+}
 
 ///////////////////////////////////////////////////////////////////
 //    email server
@@ -146,7 +156,7 @@ app.get('/pay', function (req, res) {
 
 
 ///////////////////////////////////////////////////////////////////
-//    FB connect  //http://howtonode.org/facebook-connect
+//    FB Demo Fetch (garbage) -loooong  //http://howtonode.org/facebook-connect
 ////////////////////////////////////////////////////////////////
 function handle_facebook_request(req, res) { // default facebook example, Do some fetches on facebook graph asyncrounously
 
@@ -199,18 +209,21 @@ function handle_facebook_request(req, res) { // default facebook example, Do som
 ////////////////////////////////////////////////////////////////
 
 
-app.get('/', handle_facebook_request);
-app.post('/', handle_facebook_request);
-app.get('/location', handle_facebook_request);
-app.get('/commute', handle_facebook_request);
-app.get('/promo', handle_facebook_request);
-app.get('/driver', handle_facebook_request);
-app.get('/passenger', handle_facebook_request);
-app.get('/driver/:user_id', handle_facebook_request);
-app.get('/passenger/:user_id', handle_facebook_request);
-app.get('/dashboard', handle_facebook_request);
-app.get('/home', handle_facebook_request);
-app.get('/settings', handle_facebook_request);
+app.get('/', index);
+app.post('/', handle_facebook_request); //required??
+app.get('/location', index);
+app.get('/commute', index);
+app.get('/promo', index);
+app.get('/driver', index);
+app.get('/passenger', index);
+app.get('/driver/:user_id', index);
+app.get('/passenger/:user_id', index);
+app.get('/dashboard', index);
+app.get('/home', index);
+app.get('/settings', index);
+
+
+app.get('/fb', handle_facebook_request);
 
 app.get('/echo', function (req, res) {
     echo = req.param("echo", "no param")
@@ -245,8 +258,18 @@ app.get('/me', function (req, res) {
     });
 });
 
-
-
+///////////////////////////////////////////////////////////////////
+//    CONSTANTS
+////////////////////////////////////////////////////////////////
+app.get('/api/constant', function (req, res) {
+  var c={
+    FACEBOOK_APP_ID: process.env.FACEBOOK_APP_ID,
+    STRIPE_PUBLIC_DEV: process.env.STRIPE_PUBLIC_DEV,
+    STRIPE_PUBLIC: process.env.STRIPE_PUBLIC,
+    BASE_PRICE: 1900
+  }
+  res.send(c);
+});
 ///////////////////////////////////////////////////////////////////
 //    USER data, and facebook fetching
 ////////////////////////////////////////////////////////////////

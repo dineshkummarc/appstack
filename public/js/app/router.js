@@ -7,6 +7,7 @@ var FRouter = Backbone.Router.extend({
         '/location': 'location',
         '/dashboard': 'dashboard',
         '/reserve': 'reserve',
+        '/pay': 'pay',
         '/search/:query': 'search',
         '/search/:query/p:page': 'search',
         '/help': 'help'
@@ -19,10 +20,13 @@ var FRouter = Backbone.Router.extend({
         $('section#' + s).show();
     },
     reserve: function (s) {
-        this.section('reserve:');
+        this.section('reserve');
     },
     location: function (user_id) {
         this.section('location');
+    },
+    pay: function () {
+        this.section('pay');
     },
     driver: function (user_id) {
         this.section('driver');
@@ -57,7 +61,7 @@ var FRouter = Backbone.Router.extend({
         $(css_selector).click(function (e) {
             //alert('click!');
             var h = $(this).attr('href');
-            log(h);
+            log('ROUTE: '+h);
             if ((h.indexOf('http://') != 0) && (!$(this).hasClass('norun')) && (h != "")) { // if it's not an external link...
                 // TODO: if CTRL key was pressed, let default happen... (open in a new page...)
                 e.preventDefault();
