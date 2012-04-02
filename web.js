@@ -2,6 +2,7 @@ var async = require('async');
 var express = require('express');
 var util = require('util');
 var gm = require('googlemaps'); //https://github.com/moshen/node-googlemaps/blob/master/lib/googlemaps.js
+var _       = require('underscore')._;
 /*
 var geohash = require("geohash").GeoHash;
 
@@ -200,6 +201,14 @@ function handle_facebook_request(req, res) { // default facebook example, Do som
 
 app.get('/', handle_facebook_request);
 app.post('/', handle_facebook_request);
+app.get('/location', handle_facebook_request);
+app.get('/driver', handle_facebook_request);
+app.get('/passenger', handle_facebook_request);
+app.get('/driver/:user_id', handle_facebook_request);
+app.get('/passenger/:user_id', handle_facebook_request);
+app.get('/dashboard', handle_facebook_request);
+app.get('/home', handle_facebook_request);
+app.get('/settings', handle_facebook_request);
 
 app.get('/echo', function (req, res) {
     echo = req.param("echo", "no param")
@@ -239,7 +248,7 @@ app.get('/me', function (req, res) {
 ///////////////////////////////////////////////////////////////////
 //    USER data, and facebook fetching
 ////////////////////////////////////////////////////////////////
-app.get('/user', function (req, res) { // fetch data on facebook for our user, saves it to the database.
+app.get('/api/user', function (req, res) { // fetch data on facebook for our user, saves it to the database.
     ensureSession(req, res, function () {
         db.users.find({
             id: req.session.uid
@@ -305,6 +314,7 @@ function outputUser(req, res) { //set the sessions value according to FB data or
     var id = req.user.me.id
     req.session.uid = id;
     req.session.email = req.me.email;
+    
     res.send(req.user);
 }
 
@@ -415,7 +425,29 @@ app.get('/setlocation', function (req, res) { // fetch data on facebook for our 
   });//eo ensure-session
 });
 
-
+///////////////////////////////////////////////////////////////////
+//    USER SET schedule
+////////////////////////////////////////////////////////////////
+//   /api/setlocation/?home=laval&work=montreal
+app.get('/setschedule', function (req, res) { // fetch data on facebook for our user, saves it to the database.
+    // TODO: ENsure user is logged!
+  ensureSession(req, res, function(){
+        var schedule = {
+            starthour: req.params['starthour'],
+            finishhour: req.params['finishhour'],
+            days: req.params['days'],
+            flex: req.params['flex'],
+            car: req.params['car'],
+            updated: new Date()
+        }
+        var uid = req.session.uid;
+        db.users.update({id: uid}, { $set: { schedule: schedule }}, function (err, updated) {
+            if (err || !updated) console.log("User schedule not updated: " + req.session.uid);
+            else console.log("User updated with new schedule");
+        });
+        res.send(schedule); // on production, we can just return the DB success handler...
+    }); //eo parrallel calls
+});
 ///////////////////////////////////////////////////////////////////
 //    Geo Location API V1
 ////////////////////////////////////////////////////////////////
