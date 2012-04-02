@@ -7,7 +7,7 @@ function stripe_setup(stripe_key){
      Stripe.setPublishableKey(stripe_key); 
      log('Stripe has been setup:' + stripe_key);
      //Wire Form Action// http://stripe.com/docs/tutorials/forms
-     $("#payment-form input #cc-amount").value(app.constant.get('BASE-PRICE'))
+     $("#payment-form input #cc-amount").val(app.constant.get('BASE-PRICE'))
      $("#payment-form").submit(function(event) {
        log('submit');
        $('#error').hide();

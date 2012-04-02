@@ -71,3 +71,11 @@ If you prefer to deploy yourself, push this code to a new Heroku app on the Ceda
 
 Enter the URL for your Heroku app into the Website URL section of the Facebook app settings page, hen you can visit your app on the web.
 
+
+Copyright
+-------------------------
+
+(c)2012, All rights reserved: iplanwebsite.com
+
+Code available for educational purpose only
+
